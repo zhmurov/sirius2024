@@ -6,6 +6,10 @@
 #define L 5.0
 #define N 100
 
+#define tau 0.001
+#define NSTEPS 10000
+#define STRIDE 100
+
 #define Q_NA 1.0
 #define Q_CL -1.0
 #define M_NA 22.98
@@ -41,11 +45,12 @@ struct Atom
 };
 
 void saveCoordinates(const std::string filename,
-                   const std::vector<Atom>& atoms,
-                   const std::vector<float3>& r,
-                   const std::vector<float3>& v)
+                     const std::string modifier,
+                     const std::vector<Atom>& atoms,
+                     const std::vector<float3>& r,
+                     const std::vector<float3>& v)
 {
-    FILE* fout = fopen(filename.c_str(), "w");
+    FILE* fout = fopen(filename.c_str(), modifier.c_str());
     fprintf(fout, "NaCl\n%d\n", N);
     for (int i = 0; i < N; i++)
     {
@@ -56,7 +61,7 @@ void saveCoordinates(const std::string filename,
             v[i].x, v[i].y, v[i].z
         );
     }
-    fprintf(fout, "%8.3f %8.3f %8.3f\n\n", L, L, L);
+    fprintf(fout, "%8.3f %8.3f %8.3f\n", L, L, L);
     fclose(fout);
 }
 
@@ -103,8 +108,36 @@ int main()
         v[i].x = distributionV(randomGenerator)/sqrtf(atoms[i].m);
         v[i].y = distributionV(randomGenerator)/sqrtf(atoms[i].m);
         v[i].z = distributionV(randomGenerator)/sqrtf(atoms[i].m);
+
+        f[i].x = 0.0;
+        f[i].y = 0.0;
+        f[i].z = 0.0;
     }
 
-    saveCoordinates("coord.gro", atoms, r, v);
+    saveCoordinates("coord.gro", "w", atoms, r, v);
+
+    //Integrate equations of motion
+    for(int step = 0; step <= NSTEPS; step++)
+    {
+        for (int i = 0; i < N; i++)
+        {
+            // dx/dt = v:
+            r[i].x = r[i].x + tau*v[i].x;
+            r[i].y = r[i].y + tau*v[i].y;
+            r[i].z = r[i].z + tau*v[i].z;
+
+            // m*dv/dt = f:
+            v[i].x = v[i].x + tau*f[i].x/atoms[i].m;
+            v[i].y = v[i].y + tau*f[i].y/atoms[i].m;
+            v[i].z = v[i].z + tau*f[i].z/atoms[i].m;
+        }
+
+        if (step % STRIDE == 0)
+        {
+            saveCoordinates("coord.gro", "a", atoms, r, v);
+        }
+    }
+
+    
 }
 
