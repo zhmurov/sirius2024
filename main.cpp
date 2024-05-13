@@ -25,7 +25,20 @@ struct float3
     float x, y, z;
 };
 
-void savePositions(const std::string filename, const std::vector<float3>& r)
+struct Atom
+{
+    int index;
+    std::string name;
+
+    float q;
+    float m;
+    float sigma;
+    float eps;
+};
+
+void savePositions(const std::string filename,
+                   const std::vector<Atom>& atoms,
+                   const std::vector<float3>& r)
 {
     FILE* fout = fopen(filename.c_str(), "w");
     fprintf(fout, "NaCl\n%d\n", N);
@@ -33,7 +46,7 @@ void savePositions(const std::string filename, const std::vector<float3>& r)
     {
         fprintf(fout, "%5d%-5s%5s%5d%8.3f%8.3f%8.3f%8.4f%8.4f%8.4f\n",
             i, "NaCl",
-            "At", i,
+            atoms[i].name.c_str(), atoms[i].index,
             r[i].x, r[i].y, r[i].z,
             0.0, 0.0, 0.0
         );
@@ -45,6 +58,30 @@ void savePositions(const std::string filename, const std::vector<float3>& r)
 int main()
 {
     std::vector<float3> r(N);
+    std::vector<Atom> atoms(N);
+
+    for (int i = 0; i < N; i++)
+    {
+        if (i < N/2)
+        {
+            atoms[i].index = i;
+            atoms[i].name = "Na";
+            atoms[i].q = Q_NA;
+            atoms[i].m = M_NA;
+            atoms[i].sigma = SIGMA_NA;
+            atoms[i].eps = EPSILON_NA;
+        }
+        else
+        {
+            atoms[i].index = i;
+            atoms[i].name = "Cl";
+            atoms[i].q = Q_CL;
+            atoms[i].m = M_CL;
+            atoms[i].sigma = SIGMA_CL;
+            atoms[i].eps = EPSILON_CL;
+        }
+    }
+
     std::mt19937 randomGenerator(123456);
     std::uniform_real_distribution<> distributionX(0, L);
 
@@ -55,6 +92,6 @@ int main()
         r[i].z = distributionX(randomGenerator);
     }
 
-    savePositions("pos.gro", r);
+    savePositions("pos.gro", atoms, r);
 }
 
