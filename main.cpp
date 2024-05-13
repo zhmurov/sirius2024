@@ -1,5 +1,6 @@
 #include <iostream>
 #include <random>
+#include <cmath>
 #include <vector>
 
 #define L 5.0
@@ -20,6 +21,9 @@
 
 #define COULOMB 138.9118
 
+#define T 300.0
+#define KB 8.31e-3
+
 struct float3
 {
     float x, y, z;
@@ -36,9 +40,10 @@ struct Atom
     float eps;
 };
 
-void savePositions(const std::string filename,
+void saveCoordinates(const std::string filename,
                    const std::vector<Atom>& atoms,
-                   const std::vector<float3>& r)
+                   const std::vector<float3>& r,
+                   const std::vector<float3>& v)
 {
     FILE* fout = fopen(filename.c_str(), "w");
     fprintf(fout, "NaCl\n%d\n", N);
@@ -48,7 +53,7 @@ void savePositions(const std::string filename,
             i, "NaCl",
             atoms[i].name.c_str(), atoms[i].index,
             r[i].x, r[i].y, r[i].z,
-            0.0, 0.0, 0.0
+            v[i].x, v[i].y, v[i].z
         );
     }
     fprintf(fout, "%8.3f %8.3f %8.3f\n\n", L, L, L);
@@ -57,9 +62,12 @@ void savePositions(const std::string filename,
 
 int main()
 {
-    std::vector<float3> r(N);
     std::vector<Atom> atoms(N);
 
+    std::vector<float3> r(N);
+    std::vector<float3> v(N);
+    std::vector<float3> f(N);
+    
     for (int i = 0; i < N; i++)
     {
         if (i < N/2)
@@ -83,15 +91,20 @@ int main()
     }
 
     std::mt19937 randomGenerator(123456);
-    std::uniform_real_distribution<> distributionX(0, L);
+    std::uniform_real_distribution<> distributionX(0.0, L);
+    std::normal_distribution<> distributionV(0.0, sqrtf(KB*T));
 
     for (int i = 0; i < N; i++)
     {
         r[i].x = distributionX(randomGenerator);
         r[i].y = distributionX(randomGenerator);
         r[i].z = distributionX(randomGenerator);
+
+        v[i].x = distributionV(randomGenerator)/sqrtf(atoms[i].m);
+        v[i].y = distributionV(randomGenerator)/sqrtf(atoms[i].m);
+        v[i].z = distributionV(randomGenerator)/sqrtf(atoms[i].m);
     }
 
-    savePositions("pos.gro", atoms, r);
+    saveCoordinates("coord.gro", atoms, r, v);
 }
 
