@@ -65,6 +65,19 @@ void saveCoordinates(const std::string filename,
     fclose(fout);
 }
 
+float transferPBC(float x)
+{
+    while (x < 0)
+    {
+        x += L;
+    }
+    while (x > L)
+    {
+        x -= L;
+    }
+    return x;
+}
+
 int main()
 {
     std::vector<Atom> atoms(N);
@@ -131,6 +144,10 @@ int main()
             v[i].x = v[i].x + tau*f[i].x/atoms[i].m;
             v[i].y = v[i].y + tau*f[i].y/atoms[i].m;
             v[i].z = v[i].z + tau*f[i].z/atoms[i].m;
+
+            r[i].x = transferPBC(r[i].x);
+            r[i].y = transferPBC(r[i].y);
+            r[i].z = transferPBC(r[i].z);
 
             temperature += atoms[i].m*
             (v[i].x*v[i].x + v[i].y*v[i].y + v[i].z*v[i].z);
