@@ -133,6 +133,43 @@ int main()
     //Integrate equations of motion
     for(int step = 0; step <= NSTEPS; step++)
     {
+        // Compute force
+        for (int i = 0; i < N; i++)
+        {
+            for (int j = 0; j < i; j++)
+            {
+                float dx = r[i].x - r[j].x;
+                float dy = r[i].y - r[j].y;
+                float dz = r[i].z - r[j].z;
+
+                dx -= rint(dx/L)*L;
+                dy -= rint(dy/L)*L;
+                dz -= rint(dz/L)*L;
+                
+                // Coulomb
+                float dr2 = dx*dx + dy*dy + dz*dz;
+                float dr = sqrtf(dr2);
+                float dfc = COULOMB*atoms[i].q*atoms[j].q/(dr2*dr);
+
+                // VdW
+                float sigma = 0.5*(atoms[i].sigma + atoms[j].sigma);
+                float eps = 12.0*sqrtf(atoms[i].eps*atoms[j].eps);
+                float sor2 = dr2/(sigma*sigma);
+                float sor6 = sor2*sor2*sor2;
+                float dflj = eps*sor6*(1.0 - sor6)/dr2;
+
+                float df = dfc + dflj;
+
+                f[i].x = df*dx;
+                f[i].y = df*dy;
+                f[i].z = df*dz;
+
+                f[j].x = -df*dx;
+                f[j].y = -df*dy;
+                f[j].z = -df*dz;
+            }
+        }
+
         for (int i = 0; i < N; i++)
         {
             // dx/dt = v:
