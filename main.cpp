@@ -172,15 +172,15 @@ int main()
 
         for (int i = 0; i < N; i++)
         {
-            // dx/dt = v:
-            r[i].x = r[i].x + tau*v[i].x;
-            r[i].y = r[i].y + tau*v[i].y;
-            r[i].z = r[i].z + tau*v[i].z;
-
             // m*dv/dt = f:
             v[i].x = v[i].x + tau*f[i].x/atoms[i].m;
             v[i].y = v[i].y + tau*f[i].y/atoms[i].m;
             v[i].z = v[i].z + tau*f[i].z/atoms[i].m;
+
+            // dx/dt = v:
+            r[i].x = r[i].x + tau*v[i].x;
+            r[i].y = r[i].y + tau*v[i].y;
+            r[i].z = r[i].z + tau*v[i].z;
 
             r[i].x = transferPBC(r[i].x);
             r[i].y = transferPBC(r[i].y);
