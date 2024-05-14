@@ -7,6 +7,7 @@
 #define N 100
 
 #define tau 0.001
+#define relax 0.1
 #define NSTEPS 10000
 #define STRIDE 100
 
@@ -130,6 +131,7 @@ int main()
     saveCoordinates("coord.gro", "w", atoms, r, v);
 
     double temperature = 0;
+    float scaleV = 1.0;
     //Integrate equations of motion
     for(int step = 0; step <= NSTEPS; step++)
     {
@@ -153,20 +155,20 @@ int main()
 
                 // VdW
                 float sigma = 0.5*(atoms[i].sigma + atoms[j].sigma);
-                float eps = 12.0*sqrtf(atoms[i].eps*atoms[j].eps);
+                float eps = -12.0*sqrtf(atoms[i].eps*atoms[j].eps);
                 float sor2 = (sigma*sigma)/dr2;
                 float sor6 = sor2*sor2*sor2;
                 float dflj = eps*sor6*(1.0 - sor6)/dr2;
 
                 float df = dfc + dflj;
 
-                f[i].x = df*dx;
-                f[i].y = df*dy;
-                f[i].z = df*dz;
+                f[i].x += df*dx;
+                f[i].y += df*dy;
+                f[i].z += df*dz;
 
-                f[j].x = -df*dx;
-                f[j].y = -df*dy;
-                f[j].z = -df*dz;
+                f[j].x += -df*dx;
+                f[j].y += -df*dy;
+                f[j].z += -df*dz;
             }
         }
 
@@ -176,6 +178,10 @@ int main()
             v[i].x = v[i].x + tau*f[i].x/atoms[i].m;
             v[i].y = v[i].y + tau*f[i].y/atoms[i].m;
             v[i].z = v[i].z + tau*f[i].z/atoms[i].m;
+
+            f[i].x = 0.0;
+            f[i].y = 0.0;
+            f[i].z = 0.0;
 
             // dx/dt = v:
             r[i].x = r[i].x + tau*v[i].x;
@@ -189,12 +195,32 @@ int main()
             temperature += atoms[i].m*
             (v[i].x*v[i].x + v[i].y*v[i].y + v[i].z*v[i].z);
 
+            
+            //Energy minimization
+            if (step < 1000)
+            {
+                v[i].x = 0.0;
+                v[i].y = 0.0;
+                v[i].z = 0.0;
+            } else
+            if (step >= 1000 && step < 2000)
+            {
+                v[i].x = distributionV(randomGenerator)/sqrtf(atoms[i].m);
+                v[i].y = distributionV(randomGenerator)/sqrtf(atoms[i].m);
+                v[i].z = distributionV(randomGenerator)/sqrtf(atoms[i].m);
+            } else {
+                v[i].x *= scaleV;
+                v[i].y *= scaleV;
+                v[i].z *= scaleV;
+            }
+            
         }
 
         if (step % STRIDE == 0)
         {
             temperature /= (N*STRIDE*KB*3);
             std::cout << temperature << std::endl;
+            scaleV = sqrtf(1.0 - ((temperature - T)/T)*(tau/relax));
             temperature = 0.0;
             saveCoordinates("coord.gro", "a", atoms, r, v);
         }
