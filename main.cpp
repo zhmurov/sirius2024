@@ -95,7 +95,7 @@ int main()
         }
     }
 
-    std::mt19937 randomGenerator(123456);
+    std::mt19937 randomGenerator(34443);
     std::uniform_real_distribution<> distributionX(0.0, L);
     std::normal_distribution<> distributionV(0.0, sqrtf(KB*T));
 
@@ -116,6 +116,7 @@ int main()
 
     saveCoordinates("coord.gro", "w", atoms, r, v);
 
+    double temperature = 0;
     //Integrate equations of motion
     for(int step = 0; step <= NSTEPS; step++)
     {
@@ -130,10 +131,16 @@ int main()
             v[i].x = v[i].x + tau*f[i].x/atoms[i].m;
             v[i].y = v[i].y + tau*f[i].y/atoms[i].m;
             v[i].z = v[i].z + tau*f[i].z/atoms[i].m;
+
+            temperature += atoms[i].m*
+            (v[i].x*v[i].x + v[i].y*v[i].y + v[i].z*v[i].z);
         }
 
         if (step % STRIDE == 0)
         {
+            temperature /= (N*STRIDE*KB*3);
+            std::cout << temperature << std::endl;
+            temperature = 0.0;
             saveCoordinates("coord.gro", "a", atoms, r, v);
         }
     }
