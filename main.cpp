@@ -154,7 +154,7 @@ int main()
                 // VdW
                 float sigma = 0.5*(atoms[i].sigma + atoms[j].sigma);
                 float eps = 12.0*sqrtf(atoms[i].eps*atoms[j].eps);
-                float sor2 = dr2/(sigma*sigma);
+                float sor2 = (sigma*sigma)/dr2;
                 float sor6 = sor2*sor2*sor2;
                 float dflj = eps*sor6*(1.0 - sor6)/dr2;
 
@@ -188,6 +188,7 @@ int main()
 
             temperature += atoms[i].m*
             (v[i].x*v[i].x + v[i].y*v[i].y + v[i].z*v[i].z);
+
         }
 
         if (step % STRIDE == 0)
