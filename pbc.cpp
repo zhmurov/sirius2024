@@ -5,8 +5,8 @@
 
 int main()
 {
-    float x = 0.0;
-    while (x < 15.0)
+    float x = -10.0;
+    while (x < 10.0)
     {
         std::cout << x << " " << x - rint(x/L)*L << std::endl;
         x += 1.0;

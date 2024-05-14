@@ -8,7 +8,7 @@
 
 #define tau 0.001
 #define relax 0.1
-#define NSTEPS 10000
+#define NSTEPS 1000000
 #define STRIDE 100
 
 #define Q_NA 1.0
@@ -203,23 +203,18 @@ int main()
                 v[i].y = 0.0;
                 v[i].z = 0.0;
             } else
-            if (step >= 1000 && step < 2000)
+            if (step >= 1000)
             {
-                v[i].x = distributionV(randomGenerator)/sqrtf(atoms[i].m);
-                v[i].y = distributionV(randomGenerator)/sqrtf(atoms[i].m);
-                v[i].z = distributionV(randomGenerator)/sqrtf(atoms[i].m);
-            } else {
                 v[i].x *= scaleV;
                 v[i].y *= scaleV;
                 v[i].z *= scaleV;
             }
-            
         }
 
         if (step % STRIDE == 0)
         {
             temperature /= (N*STRIDE*KB*3);
-            std::cout << temperature << std::endl;
+            std::cout << step << " " << temperature << std::endl;
             scaleV = sqrtf(1.0 - ((temperature - T)/T)*(tau/relax));
             temperature = 0.0;
             saveCoordinates("coord.gro", "a", atoms, r, v);
